@@ -1,0 +1,183 @@
+{
+  "last_node_id": 100,
+  "last_link_id": 186,
+  "nodes": [
+    {
+      "id": 8,
+      "type": "VAEDecode",
+      "pos": [938, 249],
+      "size": [210, 46],
+      "flags": {}, "order": 14, "mode": 0,
+      "inputs": [{"name": "samples", "type": "LATENT", "link": 128}, {"name": "vae", "type": "VAE", "link": 76}],
+      "outputs": [{"name": "IMAGE", "type": "IMAGE", "links": [110]}],
+      "properties": {"Node name for S&R": "VAEDecode"}
+    },
+    {
+      "id": 60,
+      "type": "SaveImage",
+      "pos": [1317, 252],
+      "size": [210, 26],
+      "flags": {}, "order": 15, "mode": 0,
+      "inputs": [{"name": "images", "type": "IMAGE", "link": 110}, {"name": "filename_prefix", "type": "STRING", "widget": {"name": "filename_prefix"}, "link": null}],
+      "outputs": [],
+      "properties": {"Node name for S&R": "SaveImage"},
+      "widgets_values": ["ComfyUI"]
+    },
+    {
+      "id": 93,
+      "type": "ImageScaleToTotalPixels",
+      "pos": [-297, 510],
+      "size": [270, 82],
+      "flags": {}, "order": 7, "mode": 0,
+      "inputs": [{"name": "image", "type": "IMAGE", "link": 177}, {"name": "upscale_method", "type": "COMBO", "widget": {"name": "upscale_method"}, "link": null}, {"name": "megapixels", "type": "FLOAT", "widget": {"name": "megapixels"}, "link": null}],
+      "outputs": [{"name": "IMAGE", "type": "IMAGE", "links": [178, 179, 180]}],
+      "properties": {"Node name for S&R": "ImageScaleToTotalPixels"},
+      "widgets_values": ["lanczos", 1]
+    },
+    {
+      "id": 38,
+      "type": "CLIPLoader",
+      "pos": [-527, 138],
+      "size": [330, 110],
+      "flags": {}, "order": 2, "mode": 0,
+      "inputs": [{"name": "clip_name", "type": "COMBO", "widget": {"name": "clip_name"}, "link": null}, {"name": "type", "type": "COMBO", "widget": {"name": "type"}, "link": null}, {"name": "device", "type": "COMBO", "widget": {"name": "device"}, "link": null}],
+      "outputs": [{"name": "CLIP", "type": "CLIP", "links": [131, 132]}],
+      "properties": {"Node name for S&R": "CLIPLoader"},
+      "widgets_values": ["qwen_2.5_vl_7b_fp8_scaled.safetensors", "qwen_image", "default"]
+    },
+    {
+      "id": 88,
+      "type": "VAEEncode",
+      "pos": [258, 612],
+      "size": [140, 46],
+      "flags": {}, "order": 9, "mode": 0,
+      "inputs": [{"name": "pixels", "type": "IMAGE", "link": 178}, {"name": "vae", "type": "VAE", "link": 168}],
+      "outputs": [{"name": "LATENT", "type": "LATENT", "links": [170]}],
+      "properties": {"Node name for S&R": "VAEEncode"}
+    },
+    {
+      "id": 3,
+      "type": "KSampler",
+      "pos": [550, 240],
+      "size": [300, 262],
+      "flags": {}, "order": 13, "mode": 0,
+      "inputs": [{"name": "model", "type": "MODEL", "link": 186}, {"name": "positive", "type": "CONDITIONING", "link": 164}, {"name": "negative", "type": "CONDITIONING", "link": 163}, {"name": "latent_image", "type": "LATENT", "link": 170}, {"name": "seed", "type": "INT", "widget": {"name": "seed"}, "link": null}, {"name": "steps", "type": "INT", "widget": {"name": "steps"}, "link": null}, {"name": "cfg", "type": "FLOAT", "widget": {"name": "cfg"}, "link": null}, {"name": "sampler_name", "type": "COMBO", "widget": {"name": "sampler_name"}, "link": null}, {"name": "scheduler", "type": "COMBO", "widget": {"name": "scheduler"}, "link": null}, {"name": "denoise", "type": "FLOAT", "widget": {"name": "denoise"}, "link": null}],
+      "outputs": [{"name": "LATENT", "type": "LATENT", "links": [128]}],
+      "properties": {"Node name for S&R": "KSampler"},
+      "widgets_values": [227667627020742, "randomize", 4, 1, "euler", "simple", 1]
+    },
+    {
+      "id": 75,
+      "type": "CFGNorm",
+      "pos": [98, -50],
+      "size": [290, 60],
+      "flags": {}, "order": 12, "mode": 0,
+      "inputs": [{"name": "model", "type": "MODEL", "link": 141}, {"name": "strength", "type": "FLOAT", "widget": {"name": "strength"}, "link": null}],
+      "outputs": [{"name": "patched_model", "type": "MODEL", "links": [186]}],
+      "properties": {"Node name for S&R": "CFGNorm"},
+      "widgets_values": [1]
+    },
+    {
+      "id": 66,
+      "type": "ModelSamplingAuraFlow",
+      "pos": [-257, -59],
+      "size": [290, 60],
+      "flags": {}, "order": 8, "mode": 0,
+      "inputs": [{"name": "model", "type": "MODEL", "link": 185}, {"name": "shift", "type": "FLOAT", "widget": {"name": "shift"}, "link": null}],
+      "outputs": [{"name": "MODEL", "type": "MODEL", "links": [141]}],
+      "properties": {"Node name for S&R": "ModelSamplingAuraFlow"},
+      "widgets_values": [3]
+    },
+    {
+      "id": 89,
+      "type": "LoraLoaderModelOnly",
+      "pos": [-619, -70],
+      "size": [270, 82],
+      "flags": {}, "order": 6, "mode": 0,
+      "inputs": [{"name": "model", "type": "MODEL", "link": 184}, {"name": "lora_name", "type": "COMBO", "widget": {"name": "lora_name"}, "link": null}, {"name": "strength_model", "type": "FLOAT", "widget": {"name": "strength_model"}, "link": null}],
+      "outputs": [{"name": "MODEL", "type": "MODEL", "links": [185]}],
+      "properties": {"Node name for S&R": "LoraLoaderModelOnly"},
+      "widgets_values": ["Qwen-Image-Lightning-4steps-V1.0.safetensors", 1]
+    },
+    {
+      "id": 37,
+      "type": "UNETLoader",
+      "pos": [-1056, -70],
+      "size": [330, 90],
+      "flags": {}, "order": 3, "mode": 0,
+      "inputs": [{"name": "unet_name", "type": "COMBO", "widget": {"name": "unet_name"}, "link": null}, {"name": "weight_dtype", "type": "COMBO", "widget": {"name": "weight_dtype"}, "link": null}],
+      "outputs": [{"name": "MODEL", "type": "MODEL", "links": [184]}],
+      "properties": {"Node name for S&R": "UNETLoader"},
+      "widgets_values": ["qwen_image_edit_fp8_e4m3fn.safetensors", "default"]
+    },
+    {
+      "id": 39,
+      "type": "VAELoader",
+      "pos": [-521, 322],
+      "size": [330, 60],
+      "flags": {}, "order": 4, "mode": 0,
+      "inputs": [{"name": "vae_name", "type": "COMBO", "widget": {"name": "vae_name"}, "link": null}],
+      "outputs": [{"name": "VAE", "type": "VAE", "links": [76, 161, 162, 168]}],
+      "properties": {"Node name for S&R": "VAELoader"},
+      "widgets_values": ["qwen_image_vae.safetensors"]
+    },
+    {
+      "id": 78,
+      "type": "LoadImage",
+      "pos": [-640, 507],
+      "size": [274, 58],
+      "flags": {}, "order": 5, "mode": 0,
+      "inputs": [{"name": "image", "type": "COMBO", "widget": {"name": "image"}, "link": null}],
+      "outputs": [{"name": "IMAGE", "type": "IMAGE", "links": [177]}, {"name": "MASK", "type": "MASK", "links": null}],
+      "properties": {"Node name for S&R": "LoadImage"},
+      "widgets_values": ["example.png"]
+    },
+    {
+      "id": 77,
+      "type": "TextEncodeQwenImageEdit",
+      "pos": [42, 346],
+      "size": [360, 150],
+      "flags": {}, "order": 11, "mode": 0,
+      "inputs": [{"name": "clip", "type": "CLIP", "link": 132}, {"name": "vae", "type": "VAE", "link": 161}, {"name": "image", "type": "IMAGE", "link": 180}, {"name": "prompt", "type": "STRING", "widget": {"name": "prompt"}, "link": null}],
+      "outputs": [{"name": "CONDITIONING", "type": "CONDITIONING", "links": [163]}],
+      "properties": {"Node name for S&R": "TextEncodeQwenImageEdit"},
+      "widgets_values": [""]
+    },
+    {
+      "id": 76,
+      "type": "TextEncodeQwenImageEdit",
+      "pos": [42, 146],
+      "size": [360, 150],
+      "flags": {}, "order": 10, "mode": 0,
+      "inputs": [{"name": "clip", "type": "CLIP", "link": 131}, {"name": "vae", "type": "VAE", "link": 162}, {"name": "image", "type": "IMAGE", "link": 179}, {"name": "prompt", "type": "STRING", "widget": {"name": "prompt"}, "link": null}],
+      "outputs": [{"name": "CONDITIONING", "type": "CONDITIONING", "links": [164]}],
+      "properties": {"Node name for S&R": "TextEncodeQwenImageEdit"},
+      "widgets_values": ["Convert to 3D Pixar animation style, in a white background, playing guitar"]
+    }
+  ],
+  "links": [
+    [76, 39, 0, 8, 1, "VAE"],
+    [110, 8, 0, 60, 0, "IMAGE"],
+    [128, 3, 0, 8, 0, "LATENT"],
+    [131, 38, 0, 76, 0, "CLIP"],
+    [132, 38, 0, 77, 0, "CLIP"],
+    [141, 66, 0, 75, 0, "MODEL"],
+    [161, 39, 0, 77, 1, "VAE"],
+    [162, 39, 0, 76, 1, "VAE"],
+    [163, 77, 0, 3, 2, "CONDITIONING"],
+    [164, 76, 0, 3, 1, "CONDITIONING"],
+    [168, 39, 0, 88, 1, "VAE"],
+    [170, 88, 0, 3, 3, "LATENT"],
+    [177, 78, 0, 93, 0, "IMAGE"],
+    [178, 93, 0, 88, 0, "IMAGE"],
+    [179, 93, 0, 76, 2, "IMAGE"],
+    [180, 93, 0, 77, 2, "IMAGE"],
+    [184, 37, 0, 89, 0, "MODEL"],
+    [185, 89, 0, 66, 0, "MODEL"],
+    [186, 75, 0, 3, 0, "MODEL"]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}
