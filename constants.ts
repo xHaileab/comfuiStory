@@ -104,7 +104,6 @@ export const WORKFLOW_DATA: Workflow = {
           "label": "filename_prefix",
           "name": "filename_prefix",
           "type": "STRING",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "filename_prefix"
@@ -144,7 +143,6 @@ export const WORKFLOW_DATA: Workflow = {
           "label": "upscale_method",
           "name": "upscale_method",
           "type": "COMBO",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "upscale_method"
@@ -154,7 +152,6 @@ export const WORKFLOW_DATA: Workflow = {
           "label": "megapixels",
           "name": "megapixels",
           "type": "FLOAT",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "megapixels"
@@ -223,7 +220,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "clip_name",
           "type": "COMBO",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "clip_name"
@@ -232,7 +228,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "type",
           "type": "COMBO",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "type"
@@ -241,7 +236,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "device",
           "type": "COMBO",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "device"
@@ -345,7 +339,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "seed",
           "type": "INT",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "seed"
@@ -354,7 +347,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "steps",
           "type": "INT",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "steps"
@@ -363,7 +355,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "cfg",
           "type": "FLOAT",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "cfg"
@@ -372,7 +363,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "sampler_name",
           "type": "COMBO",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "sampler_name"
@@ -381,7 +371,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "scheduler",
           "type": "COMBO",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "scheduler"
@@ -390,7 +379,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "denoise",
           "type": "FLOAT",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "denoise"
@@ -442,7 +430,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "strength",
           "type": "FLOAT",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "strength"
@@ -488,7 +475,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "shift",
           "type": "FLOAT",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "shift"
@@ -534,7 +520,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "lora_name",
           "type": "COMBO",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "lora_name"
@@ -543,7 +528,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "strength_model",
           "type": "FLOAT",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "strength_model"
@@ -585,7 +569,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "unet_name",
           "type": "COMBO",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "unet_name"
@@ -594,7 +577,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "weight_dtype",
           "type": "COMBO",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "weight_dtype"
@@ -636,7 +618,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "vae_name",
           "type": "COMBO",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "vae_name"
@@ -680,7 +661,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "image",
           "type": "COMBO",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "image"
@@ -689,7 +669,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "upload",
           "type": "IMAGEUPLOAD",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "upload"
@@ -751,7 +730,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "prompt",
           "type": "STRING",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "prompt"
@@ -809,7 +787,6 @@ export const WORKFLOW_DATA: Workflow = {
         {
           "name": "prompt",
           "type": "STRING",
-          // @google/genai FIX: Added missing link property to conform to WorkflowNodeInput type.
           "link": null,
           "widget": {
             "name": "prompt"

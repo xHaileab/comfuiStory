@@ -44,7 +44,6 @@ export type WorkflowLink = [
 ];
 
 export interface Workflow {
-  // @google/genai FIX: Added missing properties 'id' and 'revision' to match the data structure in constants.ts.
   id: string;
   revision: number;
   last_node_id: number;
