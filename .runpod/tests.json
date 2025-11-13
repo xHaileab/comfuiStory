@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "image_generation_prompt_test",
+      "input": {
+        "prompt": "A photorealistic image of a red sports car driving on a coastal road at sunset"
+      },
+      "timeout": 180000
+    }
+  ],
+  "config": {
+    "gpuTypeId": "NVIDIA RTX A4000",
+    "gpuCount": 1
+  }
+}
