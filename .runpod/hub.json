@@ -1,0 +1,22 @@
+{
+  "title": "ComfuiStory",
+  "description": "A complete template for deploying a ComfyUI workflow as a scalable, serverless API on RunPod. Includes a Docker environment, Python handler, model download scripts, and a frontend visualizer.",
+  "type": "serverless",
+  "category": "image",
+  "iconUrl": "https://raw.githubusercontent.com/runpod/runpod-media/main/comfyui-icon.png",
+  "config": {
+    "runsOn": "GPU",
+    "containerDiskInGb": 20,
+    "env": [
+      {
+        "key": "PROMPT",
+        "input": {
+          "name": "Prompt",
+          "type": "string",
+          "description": "The text prompt to guide the image editing workflow.",
+          "default": "Convert to 3D Pixar animation style, in a white background, playing guitar"
+        }
+      }
+    ]
+  }
+}
