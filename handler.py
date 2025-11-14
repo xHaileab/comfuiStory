@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
+"""
+RunPod Serverless Handler for ComfyUI Story
+"""
 import json
 import os
 import random
-import runpod
 import urllib.request
 import base64
 import sys
@@ -10,6 +12,8 @@ from pathlib import Path
 
 # Add ComfyUI to path
 sys.path.insert(0, '/comfyui')
+
+import runpod
 
 def download_image(url, save_path):
     """Download image from URL to save_path"""
@@ -120,9 +124,9 @@ def get_latest_output():
     images.sort(key=lambda x: x.stat().st_mtime, reverse=True)
     return images[0]
 
-def handler(event):
+def handler(job):
     """
-    RunPod serverless handler
+    RunPod serverless handler - This is the main entry point
     
     Input format:
     {
@@ -138,7 +142,7 @@ def handler(event):
         print("=" * 60)
         
         # Get inputs
-        job_input = event.get("input", {})
+        job_input = job.get("input", {})
         prompt = job_input.get("prompt", os.environ.get("PROMPT", "Convert to 3D Pixar animation style"))
         image_url = job_input.get("image_url")
         
@@ -209,6 +213,7 @@ def handler(event):
             "trace": error_trace
         }
 
+# RunPod handler function must be named 'handler'
 if __name__ == "__main__":
     print("Starting RunPod Serverless Handler for ComfyUI Story")
     print("Waiting for requests...")

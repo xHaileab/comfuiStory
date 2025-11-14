@@ -2,187 +2,250 @@
 
 A complete template for deploying a ComfyUI image editing workflow (Qwen Image Edit) as a scalable, serverless API on RunPod.
 
-## Features
+## 🚀 Quick Start - Deployment Checklist
 
-- 🎨 Qwen Image Edit model for AI-powered image transformation
-- 🚀 Serverless deployment on RunPod
-- 🔄 Automatic model downloading
-- 📦 Docker containerized
-- 🎯 Simple API interface
+### ✅ Step 1: Repository Setup
+Make sure your GitHub repository (`xHaileab/comfuiStory`) contains these files in the **root directory**:
 
-## Workflow Description
+- [x] `Dockerfile`
+- [x] `handler.py`
+- [x] `download_models.py`
+- [x] `workflow.json`
+- [x] `hub.json`
+- [x] `tests.json`
+- [x] `README.md`
 
-This workflow uses Qwen Image Edit models to transform images based on text prompts. The default prompt converts images to "3D Pixar animation style, in a white background, playing guitar".
-
-### Workflow Components
-
-- **Model**: Qwen Image Edit (FP8 quantized)
-- **VAE**: Qwen Image VAE
-- **CLIP**: Qwen 2.5 VL 7B (FP8 scaled)
-- **LoRA**: Qwen Image Lightning 4-steps
-- **Steps**: 4 (fast inference)
-- **Sampler**: Euler with Simple scheduler
-
-## Project Structure
-
-```
-.
-├── Dockerfile              # Docker image definition
-├── handler.py             # RunPod serverless handler
-├── download_models.py     # Model download script
-├── workflow.json          # ComfyUI workflow definition
-├── hub.json              # RunPod hub configuration
-├── tests.json            # Test configuration
-└── README.md             # This file
+### ✅ Step 2: Commit and Push
+```bash
+git add .
+git commit -m "Ready for RunPod deployment"
+git push origin main
 ```
 
-## Quick Start
+### ✅ Step 3: Create a GitHub Release (CRITICAL!)
+**Just pushing code does NOT trigger a build on RunPod!**
 
-### 1. Deploy to RunPod
+1. Go to your repository on GitHub: `https://github.com/xHaileab/comfuiStory`
+2. Click **"Releases"** on the right sidebar
+3. Click **"Create a new release"**
+4. Click **"Choose a tag"** and type `v1.0.0` (or any version)
+5. Set the release title: `Initial Release`
+6. Click **"Publish release"**
 
-1. Fork this repository
-2. Go to [RunPod Hub](https://console.runpod.io/hub)
-3. Click "Deploy"
-4. Select your repository
-5. Wait for the build to complete
+This tells RunPod to pull your code and start building!
 
-### 2. Test Your Endpoint
+### ✅ Step 4: Deploy on RunPod
+1. Go to [RunPod Console](https://console.runpod.io)
+2. Navigate to **Serverless** → **New Endpoint**
+3. Under **Custom Source**, select **GitHub Repository**
+4. Connect your GitHub account if not already connected
+5. Select your repository: `xHaileab/comfuiStory`
+6. Select branch: `main`
+7. Click **Next**
+8. Configure endpoint settings (already set in `hub.json`):
+   - **GPU**: NVIDIA RTX A4000
+   - **Container Disk**: 20GB
+   - **Workers**: Start with 1 min, 3 max
+9. Click **Deploy Endpoint**
 
+### ✅ Step 5: Wait for Build
+- The build will take **10-15 minutes** (ComfyUI installation)
+- Watch the **Logs** tab for progress
+- Models download on **first startup** (not during build)
+- First request may take **2-5 minutes** while models download
+
+## 📋 Important Files Explained
+
+### `hub.json` - RunPod Configuration
+- **CRITICAL**: Specifies GPU requirements (`NVIDIA RTX A4000`)
+- Sets container disk size (20GB)
+- Defines environment variables (default prompt)
+
+### `Dockerfile` - Container Setup
+- Installs ComfyUI and dependencies
+- Does **NOT** download models (would timeout build)
+- Models download on first startup instead
+
+### `handler.py` - Core Logic
+- Downloads models on first startup
+- Starts ComfyUI server in background
+- Processes API requests via HTTP to ComfyUI
+- Returns base64-encoded images
+
+### `download_models.py` - Model Manager
+- Downloads ~11GB of models from Hugging Face
+- Qwen Image Edit, VAE, CLIP, and Lightning LoRA
+- Runs automatically on first handler startup
+
+## 🧪 Testing Your Endpoint
+
+### Using RunPod Console
+1. Go to your endpoint's **Requests** tab
+2. Use this test input:
+```json
+{
+  "input": {
+    "prompt": "Convert to 3D Pixar animation style",
+    "image_url": "https://example.com/your-image.jpg"
+  }
+}
+```
+3. Click **Run**
+4. Wait for the result (base64 image)
+
+### Using Python SDK
 ```python
 import runpod
 import base64
 
-# Initialize the endpoint
+# Initialize endpoint
 endpoint = runpod.Endpoint("YOUR_ENDPOINT_ID")
 
-# Run inference
+# Send request
 result = endpoint.run({
     "input": {
-        "prompt": "Convert to 3D Pixar animation style",
-        "image_url": "https://example.com/your-image.jpg"
+        "prompt": "Convert to 3D Pixar animation style, white background",
+        "image_url": "https://example.com/image.jpg"
     }
 })
 
-# Save the output image
+# Save output
 if result["status"] == "success":
     img_data = base64.b64decode(result["image"])
     with open("output.png", "wb") as f:
         f.write(img_data)
 ```
 
-### 3. API Request Format
-
-**Input:**
-```json
-{
-  "input": {
-    "prompt": "Your text prompt here",
-    "image_url": "https://example.com/image.jpg"
-  }
-}
-```
-
-**Output:**
-```json
-{
-  "status": "success",
-  "image": "base64_encoded_image_data",
-  "image_path": "/path/to/output.png"
-}
-```
-
-## Environment Variables
-
-You can set default values in `hub.json`:
-
-- `PROMPT`: Default text prompt for image transformation
-
-## GPU Requirements
-
-- **Recommended**: NVIDIA RTX A4000 or better
-- **VRAM**: At least 16GB
-- **Container Disk**: 20GB
-
-## Model Information
-
-This template uses the Qwen Image Edit models:
-
-- **qwen_image_edit_fp8_e4m3fn.safetensors** (~3.5GB)
-- **qwen_image_vae.safetensors** (~200MB)
-- **qwen_2.5_vl_7b_fp8_scaled.safetensors** (~7GB)
-- **Qwen-Image-Lightning-4steps-V1.0.safetensors** (~500MB)
-
-Total download size: ~11GB
-
-## Customization
-
-### Modify the Prompt
-
-Edit the default prompt in `hub.json`:
-
-```json
-{
-  "key": "PROMPT",
-  "input": {
-    "default": "Your custom prompt here"
-  }
-}
-```
-
-### Adjust Workflow Settings
-
-Edit `workflow.json` to modify:
-- Number of inference steps
-- CFG scale
-- Sampler type
-- Image resolution
-
-### Add Custom Models
-
-1. Add model URLs to `download_models.py`
-2. Update the workflow in `workflow.json`
-3. Rebuild the Docker image
-
-## Local Testing
-
-Build and test locally:
-
+### Using cURL
 ```bash
-# Build the Docker image
-docker build -t comfyui-story .
-
-# Run locally
-docker run --gpus all -p 8000:8000 comfyui-story
+curl -X POST https://api.runpod.ai/v2/YOUR_ENDPOINT_ID/run \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "input": {
+      "prompt": "Convert to 3D Pixar animation style",
+      "image_url": "https://example.com/image.jpg"
+    }
+  }'
 ```
 
-## Troubleshooting
+## 🔧 How It Works
 
-### Models not downloading
-- Check the model URLs in `download_models.py`
-- Ensure you have sufficient disk space (20GB+)
-- Verify internet connectivity during build
+### Architecture
+```
+RunPod Request → Handler.py → ComfyUI Server (127.0.0.1:8188) → Image Generation → Base64 Response
+                     ↓
+            Download Models (First Run Only)
+```
 
-### Out of memory errors
-- Use a GPU with more VRAM
-- Reduce image resolution in workflow
-- Enable model offloading
+### Workflow Process
+1. **Handler receives request** with prompt and optional image URL
+2. **Downloads input image** if URL provided, else uses `example.png`
+3. **Updates workflow JSON** with prompt, image, and random seed
+4. **Queues prompt** to ComfyUI server via HTTP POST
+5. **Polls for completion** checking `/history/{prompt_id}`
+6. **Retrieves output image** from `/comfyui/output/`
+7. **Returns base64-encoded** image in response
 
-### Slow inference
-- Check GPU utilization
-- Consider using Qwen Image Lightning for faster results
-- Reduce number of steps (already at 4)
+### Model Information
+- **qwen_image_edit_fp8_e4m3fn.safetensors** (~3.5GB) - Main UNET model
+- **qwen_image_vae.safetensors** (~200MB) - VAE for encoding/decoding
+- **qwen_2.5_vl_7b_fp8_scaled.safetensors** (~7GB) - CLIP for text encoding
+- **Qwen-Image-Lightning-4steps-V1.0.safetensors** (~500MB) - Fast inference LoRA
 
-## License
+**Total:** ~11GB downloaded on first startup
+
+## 🐛 Troubleshooting
+
+### Build Fails / Times Out
+**Problem:** Build gets stuck or fails during model download.
+**Solution:** Models are downloaded on **first startup**, not during build. Make sure your Dockerfile does **not** have `RUN python /comfyui/download_models.py`.
+
+### "Handler not found" Error
+**Problem:** RunPod can't find the handler function.
+**Solution:** 
+- Handler file must be named `handler.py`
+- Handler function must be named `handler(event)`
+- Must have `runpod.serverless.start({"handler": handler})` at the bottom
+
+### First Request Takes Forever
+**Problem:** First request takes 2-5 minutes.
+**Solution:** This is **normal**. Models are downloading (~11GB). Subsequent requests will be fast (4-10 seconds).
+
+### Out of Memory / GPU Error
+**Problem:** Worker crashes with CUDA OOM or GPU errors.
+**Solution:** 
+- Use **NVIDIA RTX A4000** (16GB VRAM) or better
+- Check `hub.json` has `"gpuIds": "NVIDIA RTX A4000"`
+- Don't use smaller GPUs like RTX 4000
+
+### No Output Image Generated
+**Problem:** Request completes but no image returned.
+**Solution:**
+- Check ComfyUI server logs in RunPod console
+- Verify input image downloaded correctly
+- Check workflow nodes are properly connected
+
+### Release Doesn't Trigger Build
+**Problem:** Created release but RunPod doesn't build.
+**Solution:**
+- Make sure you created a **GitHub Release**, not just a tag
+- Check RunPod has permissions to access your repository
+- Try disconnecting and reconnecting GitHub in RunPod settings
+
+## 💡 Optimization Tips
+
+### Cost Optimization
+- Set **Min Workers: 0** to avoid idle costs
+- Set **Max Workers: 3** for moderate traffic
+- Use **Flex Workers** (15% cheaper) for non-time-sensitive requests
+
+### Performance Optimization
+- Use **Reserved Workers** (always-on) for zero cold starts
+- Attach a **Network Volume** to cache models across workers
+- Enable **GPU Type Priority** to try cheaper GPUs first
+
+### Scaling Strategy
+- Start small: 0 min, 1 max workers
+- Monitor queue times in RunPod dashboard
+- Increase max workers if queue grows
+- Add reserved workers if cold starts are an issue
+
+## 📚 Additional Resources
+
+- [RunPod Serverless Documentation](https://docs.runpod.io/serverless/overview)
+- [ComfyUI GitHub](https://github.com/comfyanonymous/ComfyUI)
+- [Qwen Image Models](https://huggingface.co/Comfy-Org/qwen_image_models)
+- [RunPod Discord Community](https://discord.gg/runpod)
+
+## 🔒 Security Notes
+
+- Never commit API keys to your repository
+- Use RunPod's environment variables for secrets
+- Image URLs should be from trusted sources only
+- Consider adding input validation for production use
+
+## 📝 License
 
 No license specified. Check individual model licenses:
-- Qwen models: Check [Hugging Face](https://huggingface.co/Comfy-Org/qwen_image_models)
+- [Qwen Models License](https://huggingface.co/Comfy-Org/qwen_image_models)
 
-## Support
+## 🆘 Support
 
-For issues and questions:
-- [RunPod Documentation](https://docs.runpod.io)
-- [ComfyUI GitHub](https://github.com/comfyanonymous/ComfyUI)
+- **RunPod Issues**: [help@runpod.io](mailto:help@runpod.io)
+- **GitHub Issues**: [Create an issue](https://github.com/xHaileab/comfuiStory/issues)
+- **Discord**: [RunPod Community](https://discord.gg/runpod)
 
-## Badge
+---
 
-[![Deploy on RunPod](https://api.runpod.io/badge/xHaileab/comfuiStory)](https://console.runpod.io/hub/xHaileab/comfuiStory)
+## 🎯 Next Steps After Deployment
+
+1. ✅ Test with the default example prompt
+2. ✅ Try with your own image URLs
+3. ✅ Experiment with different prompts
+4. ✅ Monitor costs in RunPod dashboard
+5. ✅ Scale workers based on your traffic
+6. ✅ Consider adding a frontend application
+7. ✅ Set up monitoring and alerts
+
+**Happy deploying! 🚀**
