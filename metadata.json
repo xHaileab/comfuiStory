@@ -1,5 +1,0 @@
-{
-  "name": "ComfyUI Serverless API Template",
-  "description": "A complete template for deploying a ComfyUI workflow as a scalable, serverless API on RunPod. Includes a Docker environment, Python handler, model download scripts, and a frontend visualizer.",
-  "requestFramePermissions": []
-}

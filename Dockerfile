@@ -1,4 +1,4 @@
-FROM runpod/pytorch:2.1.0-py3.10-cuda11.8.0-devel-ubuntu22.04
+FROM runpod/pytorch:2.2.1-py3.10-cuda12.1.1-devel-ubuntu22.04
 
 # Set working directory
 WORKDIR /
@@ -19,23 +19,26 @@ WORKDIR /comfyui
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install additional required packages
-RUN pip install --no-cache-dir runpod
+RUN pip install --no-cache-dir runpod requests
 
 # Create directories for models
-RUN mkdir -p /comfyui/models/checkpoints \
+RUN mkdir -p /comfyui/models/unet \
     /comfyui/models/vae \
     /comfyui/models/clip \
     /comfyui/models/loras \
     /comfyui/input \
     /comfyui/output
 
-# Copy workflow and handler
+# Copy files
 COPY workflow.json /comfyui/workflow_api.json
 COPY handler.py /comfyui/handler.py
 COPY download_models.py /comfyui/download_models.py
 
-# Download models
-RUN python /comfyui/download_models.py
+# Download models during build
+RUN python /comfyui/download_models.py || echo "Model download failed, will retry at runtime"
+
+# Expose port (optional, for local testing)
+EXPOSE 8000
 
 # Set the entrypoint
 CMD ["python", "-u", "/comfyui/handler.py"]
