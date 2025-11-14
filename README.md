@@ -1,121 +1,188 @@
-# ComfyUI Serverless Deployment on RunPod
+# ComfyUI Story - RunPod Serverless Template
 
-[![Runpod](https://api.runpod.io/badge/xHaileab/comfuiStory)](https://console.runpod.io/hub/xHaileab/comfuiStory)
-
-This repository provides a complete template for deploying a sophisticated ComfyUI image editing workflow as a scalable, serverless API endpoint using RunPod. It includes a pre-configured Docker environment, a Python handler for processing requests, and all the necessary scripts to get you started quickly.
-
-This repository also contains a frontend React application in `/` to visualize and inspect the `workflow.json`.
+A complete template for deploying a ComfyUI image editing workflow (Qwen Image Edit) as a scalable, serverless API on RunPod.
 
 ## Features
 
--   **Scalable & Cost-Effective**: Leverages RunPod's serverless platform to scale from zero to handle high demand, ensuring you only pay for what you use.
--   **Pre-configured Workflow**: Includes a ready-to-use Qwen Image Edit workflow for high-quality image manipulation.
--   **Customizable**: Easily swap out the workflow, models, or handler logic to fit your own needs.
--   **Optimized for Cold Starts**: Models are pre-downloaded into the Docker image to minimize startup times.
+- 🎨 Qwen Image Edit model for AI-powered image transformation
+- 🚀 Serverless deployment on RunPod
+- 🔄 Automatic model downloading
+- 📦 Docker containerized
+- 🎯 Simple API interface
 
----
+## Workflow Description
 
-## Deployment Guide
+This workflow uses Qwen Image Edit models to transform images based on text prompts. The default prompt converts images to "3D Pixar animation style, in a white background, playing guitar".
 
-Follow these steps to build the Docker container and deploy it on RunPod.
+### Workflow Components
 
-### Prerequisites
+- **Model**: Qwen Image Edit (FP8 quantized)
+- **VAE**: Qwen Image VAE
+- **CLIP**: Qwen 2.5 VL 7B (FP8 scaled)
+- **LoRA**: Qwen Image Lightning 4-steps
+- **Steps**: 4 (fast inference)
+- **Sampler**: Euler with Simple scheduler
 
--   A [Docker](https://www.docker.com/products/docker-desktop/) installation.
--   A [RunPod](https://runpod.io/) account.
--   A container registry (e.g., [Docker Hub](https://hub.docker.com/)).
+## Project Structure
 
-### Step 1: Build the Docker Image
-
-Navigate to the project's root directory in your terminal and run the build command. Replace `your-username` with your Docker Hub username.
-
-```bash
-docker build -t your-username/comfyui-qwen-serverless:latest .
+```
+.
+├── Dockerfile              # Docker image definition
+├── handler.py             # RunPod serverless handler
+├── download_models.py     # Model download script
+├── workflow.json          # ComfyUI workflow definition
+├── hub.json              # RunPod hub configuration
+├── tests.json            # Test configuration
+└── README.md             # This file
 ```
 
-This process will take some time as it installs dependencies and downloads several gigabytes of models.
+## Quick Start
 
-### Step 2: Push the Image to a Registry
+### 1. Deploy to RunPod
 
-Once the build is complete, push the image to your container registry.
+1. Fork this repository
+2. Go to [RunPod Hub](https://console.runpod.io/hub)
+3. Click "Deploy"
+4. Select your repository
+5. Wait for the build to complete
 
-```bash
-docker push your-username/comfyui-qwen-serverless:latest
+### 2. Test Your Endpoint
+
+```python
+import runpod
+import base64
+
+# Initialize the endpoint
+endpoint = runpod.Endpoint("YOUR_ENDPOINT_ID")
+
+# Run inference
+result = endpoint.run({
+    "input": {
+        "prompt": "Convert to 3D Pixar animation style",
+        "image_url": "https://example.com/your-image.jpg"
+    }
+})
+
+# Save the output image
+if result["status"] == "success":
+    img_data = base64.b64decode(result["image"])
+    with open("output.png", "wb") as f:
+        f.write(img_data)
 ```
 
-### Step 3: Create a RunPod Template
+### 3. API Request Format
 
-1.  Log in to your RunPod account.
-2.  Navigate to **Serverless > Templates** from the left-hand menu.
-3.  Click **New Template**.
-4.  Configure the template:
-    -   **Template Name**: Give it a descriptive name, like `comfyui-qwen-template`.
-    -   **Container Image**: Enter the name of the image you just pushed (e.g., `your-username/comfyui-qwen-serverless:latest`).
-    -   **Container Disk**: Set to at least **15 GB** to accommodate the models.
-    -   **GPU Type**: Select a suitable GPU. An **NVIDIA RTX A4000** is a good starting point.
-5.  Click **Save Template**.
-
-### Step 4: Create a Serverless Endpoint
-
-1.  Navigate to **Serverless > Endpoints** from the left-hand menu.
-2.  Click **New Endpoint**.
-3.  Configure the endpoint:
-    -   **Endpoint Name**: Name your API endpoint.
-    -   **Select Template**: Choose the template you created in the previous step.
-    -   **Workers**: Set the minimum and maximum number of concurrent workers based on your expected load. You can start with Min: 0, Max: 3.
-    -   **Idle Timeout**: Set a timeout for idle workers (e.g., 5 minutes).
-4.  Click **Create Endpoint**.
-
-Your API is now deploying! Once it's ready, you'll have an API URL to send requests to.
-
----
-
-## API Usage
-
-You can interact with your new endpoint using any HTTP client.
-
-### Request Format
-
-Send a `POST` request to your endpoint's URL. The body must be a JSON object containing the prompt.
-
-**Endpoint URL:** `https://api.runpod.ai/v2/{YOUR_ENDPOINT_ID}/runsync`
-
-**Body:**
-
+**Input:**
 ```json
 {
   "input": {
-    "prompt": "A majestic lion wearing a crown, cinematic lighting"
+    "prompt": "Your text prompt here",
+    "image_url": "https://example.com/image.jpg"
   }
 }
 ```
 
-### Example cURL Request
-
-Replace `{YOUR_ENDPOINT_ID}` and `{YOUR_RUNPOD_API_KEY}` with your actual credentials.
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer {YOUR_RUNPOD_API_KEY}" \
-  -d '{
-    "input": {
-      "prompt": "A robot playing a grand piano on a futuristic city rooftop"
-    }
-  }' \
-  https://api.runpod.ai/v2/{YOUR_ENDPOINT_ID}/runsync
+**Output:**
+```json
+{
+  "status": "success",
+  "image": "base64_encoded_image_data",
+  "image_path": "/path/to/output.png"
+}
 ```
 
-### Response Format
+## Environment Variables
 
-A successful request will return a JSON object containing the base64-encoded output image.
+You can set default values in `hub.json`:
+
+- `PROMPT`: Default text prompt for image transformation
+
+## GPU Requirements
+
+- **Recommended**: NVIDIA RTX A4000 or better
+- **VRAM**: At least 16GB
+- **Container Disk**: 20GB
+
+## Model Information
+
+This template uses the Qwen Image Edit models:
+
+- **qwen_image_edit_fp8_e4m3fn.safetensors** (~3.5GB)
+- **qwen_image_vae.safetensors** (~200MB)
+- **qwen_2.5_vl_7b_fp8_scaled.safetensors** (~7GB)
+- **Qwen-Image-Lightning-4steps-V1.0.safetensors** (~500MB)
+
+Total download size: ~11GB
+
+## Customization
+
+### Modify the Prompt
+
+Edit the default prompt in `hub.json`:
 
 ```json
 {
-  "id": "some-job-id",
-  "status": "COMPLETED",
-  "output": {
-    "image_b64": "iVBORw0KGgoAAAANSUhEUgA... (long base64 string) ..."
+  "key": "PROMPT",
+  "input": {
+    "default": "Your custom prompt here"
   }
 }
 ```
+
+### Adjust Workflow Settings
+
+Edit `workflow.json` to modify:
+- Number of inference steps
+- CFG scale
+- Sampler type
+- Image resolution
+
+### Add Custom Models
+
+1. Add model URLs to `download_models.py`
+2. Update the workflow in `workflow.json`
+3. Rebuild the Docker image
+
+## Local Testing
+
+Build and test locally:
+
+```bash
+# Build the Docker image
+docker build -t comfyui-story .
+
+# Run locally
+docker run --gpus all -p 8000:8000 comfyui-story
+```
+
+## Troubleshooting
+
+### Models not downloading
+- Check the model URLs in `download_models.py`
+- Ensure you have sufficient disk space (20GB+)
+- Verify internet connectivity during build
+
+### Out of memory errors
+- Use a GPU with more VRAM
+- Reduce image resolution in workflow
+- Enable model offloading
+
+### Slow inference
+- Check GPU utilization
+- Consider using Qwen Image Lightning for faster results
+- Reduce number of steps (already at 4)
+
+## License
+
+No license specified. Check individual model licenses:
+- Qwen models: Check [Hugging Face](https://huggingface.co/Comfy-Org/qwen_image_models)
+
+## Support
+
+For issues and questions:
+- [RunPod Documentation](https://docs.runpod.io)
+- [ComfyUI GitHub](https://github.com/comfyanonymous/ComfyUI)
+
+## Badge
+
+[![Deploy on RunPod](https://api.runpod.io/badge/xHaileab/comfuiStory)](https://console.runpod.io/hub/xHaileab/comfuiStory)
