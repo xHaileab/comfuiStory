@@ -1,26 +1,47 @@
-#!/usr/bin/env python3
-"""
-RunPod Serverless Handler for ComfyUI Story
-"""
-import json
 import os
+import runpod
+import time
+import json
 import random
+import requests
+import subprocess
 import urllib.request
-import base64
-import sys
 from pathlib import Path
 
-# Add ComfyUI to path
-sys.path.insert(0, '/comfyui')
+# --- ComfyUI Server ---
+COMFYUI_URL = "http://127.0.0.1:8188"
+comfyui_process = None
 
-import runpod
+def start_comfyui():
+    """Starts the ComfyUI server as a subprocess."""
+    global comfyui_process
+    # --listen is important for 127.0.0.1
+    # --port 8188 is the default
+    cmd = ["python", "/comfyui/main.py", "--listen", "--port", "8188"]
+    
+    print("Starting ComfyUI server...")
+    comfyui_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    
+    # Wait for the server to be ready
+    for _ in range(60):  # Increased timeout to 60 seconds
+        try:
+            requests.get(f"{COMFYUI_URL}/system_stats", timeout=2)
+            print("✓ ComfyUI server is ready!")
+            return
+        except (requests.ConnectionError, requests.Timeout):
+            time.sleep(1)
+    
+    print("✗ ComfyUI server failed to start.")
+    # Print error logs
+    if comfyui_process.stderr:
+        stderr = comfyui_process.stderr.read()
+        print(f"ComfyUI Error: {stderr}")
+    raise RuntimeError("ComfyUI server failed to start")
 
 def download_image(url, save_path):
     """Download image from URL to save_path"""
     try:
-        print(f"Downloading image from: {url}")
         urllib.request.urlretrieve(url, save_path)
-        print(f"Image saved to: {save_path}")
         return True
     except Exception as e:
         print(f"Error downloading image: {e}")
@@ -31,190 +52,148 @@ def load_workflow(workflow_path="/comfyui/workflow_api.json"):
     with open(workflow_path, 'r') as f:
         return json.load(f)
 
-def update_workflow(workflow, prompt, image_filename="example.png"):
-    """Update workflow with user inputs"""
-    # Update the positive prompt (node 76)
-    for node in workflow['nodes']:
-        if node['id'] == 76:  # Positive prompt node
-            node['widgets_values'][0] = prompt
-            print(f"Updated prompt to: {prompt}")
-        
-        # Update image path (node 78 - LoadImage)
-        if node['id'] == 78:
-            node['widgets_values'][0] = image_filename
-            print(f"Updated input image to: {image_filename}")
-        
-        # Randomize seed (node 3 - KSampler)
-        if node['id'] == 3:
-            new_seed = random.randint(0, 2**32 - 1)
-            node['widgets_values'][0] = new_seed
-            print(f"Set random seed: {new_seed}")
-    
-    return workflow
-
-def execute_workflow(workflow):
-    """Execute the ComfyUI workflow"""
+def queue_prompt(workflow):
+    """Queues a prompt to the ComfyUI server"""
+    payload = {"prompt": workflow}
     try:
-        import execution
-        import nodes
-        
-        # Convert workflow format to ComfyUI prompt format
-        prompt = {}
-        for node in workflow['nodes']:
-            node_id = str(node['id'])
-            node_inputs = {}
-            
-            # Process node inputs from links
-            if 'inputs' in node:
-                for inp in node['inputs']:
-                    if 'link' in inp and inp['link'] is not None:
-                        # Find the source of this link
-                        for link in workflow['links']:
-                            if link[0] == inp['link']:
-                                source_node_id = str(link[1])
-                                source_output_index = link[2]
-                                node_inputs[inp['name']] = [source_node_id, source_output_index]
-                                break
-            
-            # Add widget values as inputs
-            if 'widgets_values' in node and len(node['widgets_values']) > 0:
-                node_class = nodes.NODE_CLASS_MAPPINGS.get(node['type'])
-                if node_class and hasattr(node_class, 'INPUT_TYPES'):
-                    input_types = node_class.INPUT_TYPES()
-                    required_inputs = input_types.get('required', {})
-                    
-                    # Map widget values to input names
-                    widget_index = 0
-                    for input_name, input_spec in required_inputs.items():
-                        if input_name not in node_inputs:
-                            if widget_index < len(node['widgets_values']):
-                                node_inputs[input_name] = node['widgets_values'][widget_index]
-                                widget_index += 1
-            
-            prompt[node_id] = {
-                "inputs": node_inputs,
-                "class_type": node['type']
-            }
-        
-        # Execute the prompt
-        print("Executing workflow...")
-        prompt_id = str(random.randint(0, 999999))
-        
-        executor = execution.PromptExecutor(None)
-        output = executor.execute(prompt, prompt_id, {}, [])
-        
-        print("Workflow execution completed")
-        return True
-        
+        res = requests.post(f"{COMFYUI_URL}/prompt", json=payload, timeout=10)
+        res.raise_for_status()
+        return res.json()
     except Exception as e:
-        print(f"Error executing workflow: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
-
-def get_latest_output():
-    """Get the most recent output image"""
-    output_dir = Path("/comfyui/output")
-    images = list(output_dir.glob("*.png")) + list(output_dir.glob("*.jpg"))
-    
-    if not images:
+        print(f"Error queueing prompt: {e}")
         return None
-    
-    # Sort by modification time, newest first
-    images.sort(key=lambda x: x.stat().st_mtime, reverse=True)
-    return images[0]
 
-def handler(job):
-    """
-    RunPod serverless handler - This is the main entry point
-    
-    Input format:
-    {
-        "input": {
-            "prompt": "Your text prompt",
-            "image_url": "https://example.com/image.jpg" (optional)
-        }
-    }
-    """
+def get_history(prompt_id):
+    """Gets the history for a given prompt ID"""
     try:
-        print("=" * 60)
-        print("Processing new request")
-        print("=" * 60)
-        
-        # Get inputs
-        job_input = job.get("input", {})
+        res = requests.get(f"{COMFYUI_URL}/history/{prompt_id}", timeout=5)
+        res.raise_for_status()
+        return res.json()
+    except Exception as e:
+        print(f"Error getting history: {e}")
+        return None
+
+def get_latest_output_image():
+    """Finds the most recent PNG file in the output directory"""
+    output_dir = Path("/comfyui/output")
+    files = list(output_dir.glob("*.png"))
+    if not files:
+        return None
+    files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
+    return files[0]
+
+# --- RunPod Handler ---
+def handler(event):
+    """RunPod serverless handler function"""
+    try:
+        # Get input from event
+        job_input = event.get("input", {})
         prompt = job_input.get("prompt", os.environ.get("PROMPT", "Convert to 3D Pixar animation style"))
-        image_url = job_input.get("image_url")
+        image_url = job_input.get("image_url", None)
         
-        print(f"Prompt: {prompt}")
-        print(f"Image URL: {image_url}")
+        print(f"Processing request with prompt: {prompt}")
         
-        # Handle input image
+        # --- Handle Image ---
+        input_image_name = "example.png"  # Default
         if image_url:
-            image_filename = f"input_{random.randint(100000, 999999)}.png"
-            image_path = f"/comfyui/input/{image_filename}"
+            print(f"Downloading image from: {image_url}")
+            input_image_name = f"input_{random.randint(0, 999999)}.png"
+            image_path = f"/comfyui/input/{input_image_name}"
             
             if not download_image(image_url, image_path):
-                return {"error": "Failed to download input image from URL"}
-        else:
-            # Use default example image
-            image_filename = "example.png"
-            image_path = f"/comfyui/input/{image_filename}"
+                return {"error": "Failed to download input image"}
             
-            if not os.path.exists(image_path):
-                return {"error": "No input image provided and no example.png found in /comfyui/input/"}
-        
-        # Clear old output files
-        output_dir = Path("/comfyui/output")
-        for old_file in output_dir.glob("*.png"):
-            try:
-                old_file.unlink()
-            except:
-                pass
-        
-        # Load and update workflow
+            print(f"Image saved to: {image_path}")
+        else:
+            print("No image_url provided, using default 'example.png'")
+
+        # --- Load & Update Workflow ---
         workflow = load_workflow()
-        workflow = update_workflow(workflow, prompt, image_filename)
         
-        # Execute workflow
-        if not execute_workflow(workflow):
-            return {"error": "Workflow execution failed"}
+        # Find nodes by ID and update them
+        for node in workflow['nodes']:
+            # Update positive prompt (Node 76)
+            if node['id'] == 76:
+                node['widgets_values'][0] = prompt
+                print(f"Updated prompt in node 76")
+            
+            # Update image path (Node 78 - LoadImage)
+            if node['id'] == 78:
+                node['widgets_values'][0] = input_image_name
+                print(f"Updated input image in node 78")
+            
+            # Randomize seed (Node 3 - KSampler)
+            if node['id'] == 3:
+                node['widgets_values'][0] = random.randint(0, 2**32 - 1)
+                print(f"Updated seed in node 3")
         
-        # Get output image
-        output_image = get_latest_output()
-        if not output_image:
-            return {"error": "No output image was generated"}
+        # --- Execute Workflow ---
+        print("Queueing prompt...")
+        prompt_data = queue_prompt(workflow)
+        if not prompt_data or 'prompt_id' not in prompt_data:
+            return {"error": "Failed to queue prompt"}
+            
+        prompt_id = prompt_data['prompt_id']
         
-        print(f"Output image: {output_image}")
+        # --- Wait for Output ---
+        print(f"Waiting for prompt {prompt_id}...")
+        max_wait = 300  # 5 minutes timeout
+        start_time = time.time()
         
-        # Read and encode image
-        with open(output_image, 'rb') as f:
-            image_data = base64.b64encode(f.read()).decode('utf-8')
+        while time.time() - start_time < max_wait:
+            history = get_history(prompt_id)
+            if history and prompt_id in history:
+                if 'outputs' in history[prompt_id]:
+                    print("✓ Workflow execution complete")
+                    break
+            time.sleep(1)  # Poll every second
+        else:
+            return {"error": "Workflow execution timed out"}
         
-        print("=" * 60)
-        print("Request completed successfully")
-        print("=" * 60)
+        # --- Get Image ---
+        output_image_path = get_latest_output_image()
+        if not output_image_path:
+            return {"error": "No output image found"}
+            
+        print(f"Generated image: {output_image_path}")
+        
+        # Read image as base64
+        import base64
+        with open(output_image_path, 'rb') as img_file:
+            img_data = base64.b64encode(img_file.read()).decode('utf-8')
         
         return {
             "status": "success",
-            "image": image_data,
-            "image_path": str(output_image)
+            "image": img_data,
+            "image_path": str(output_image_path)
         }
         
     except Exception as e:
         import traceback
         error_trace = traceback.format_exc()
-        print("=" * 60)
-        print("ERROR:")
-        print(error_trace)
-        print("=" * 60)
-        return {
-            "error": str(e),
-            "trace": error_trace
-        }
+        print(f"Error in handler: {error_trace}")
+        return {"error": str(e), "trace": error_trace}
 
-# RunPod handler function must be named 'handler'
+# --- Main Execution ---
 if __name__ == "__main__":
-    print("Starting RunPod Serverless Handler for ComfyUI Story")
-    print("Waiting for requests...")
+    # 1. Download models first
+    print("=" * 60)
+    print("Running model downloader...")
+    print("=" * 60)
+    
+    import download_models
+    if not download_models.download_all_models():
+        print("✗ Model download failed. Some models may be missing.")
+        print("  The endpoint will still start, but may fail on first request.")
+    
+    # 2. Start ComfyUI server in the background
+    print("=" * 60)
+    print("Starting ComfyUI server...")
+    print("=" * 60)
+    start_comfyui()
+    
+    # 3. Start RunPod handler
+    print("=" * 60)
+    print("Starting RunPod serverless handler...")
+    print("=" * 60)
     runpod.serverless.start({"handler": handler})

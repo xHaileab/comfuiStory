@@ -4,7 +4,7 @@ from pathlib import Path
 
 # Model URLs - Replace these with actual URLs from Hugging Face or other sources
 MODELS = {
-    "checkpoints": {
+    "unet": {
         "qwen_image_edit_fp8_e4m3fn.safetensors": "https://huggingface.co/Comfy-Org/qwen_image_models/resolve/main/qwen_image_edit_fp8_e4m3fn.safetensors"
     },
     "vae": {
