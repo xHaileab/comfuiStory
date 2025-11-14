@@ -1,5 +1,7 @@
 # ComfyUI Serverless Deployment on RunPod
 
+[![Runpod](https://api.runpod.io/badge/xHaileab/comfuiStory)](https://console.runpod.io/hub/xHaileab/comfuiStory)
+
 This repository provides a complete template for deploying a sophisticated ComfyUI image editing workflow as a scalable, serverless API endpoint using RunPod. It includes a pre-configured Docker environment, a Python handler for processing requests, and all the necessary scripts to get you started quickly.
 
 This repository also contains a frontend React application in `/` to visualize and inspect the `workflow.json`.
