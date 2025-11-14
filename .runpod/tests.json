@@ -1,11 +1,11 @@
 {
   "tests": [
     {
-      "name": "image_generation_prompt_test",
+      "name": "dummy_test",
       "input": {
-        "prompt": "A photorealistic image of a red sports car driving on a coastal road at sunset"
+        "prompt": "A test"
       },
-      "timeout": 180000
+      "timeout": 10000
     }
   ],
   "config": {

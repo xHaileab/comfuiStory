@@ -1,0 +1,6 @@
+comfyui:
+  unet: /runpod-volume/models/unet
+  clip: /runpod-volume/models/clip
+  vae: /runpod-volume/models/vae
+  loras: /runpod-volume/models/loras
+  input: /runpod-volume/input
