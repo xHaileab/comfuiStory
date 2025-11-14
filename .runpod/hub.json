@@ -6,9 +6,11 @@
   "iconUrl": "https://raw.githubusercontent.com/runpod/runpod-media/main/comfyui-icon.png",
   "config": {
     "runsOn": "GPU",
-    "containerDiskInGb": 20,
+    "containerDiskInGb": 10,
     "gpuCount": 1,
     "gpuIds": "NVIDIA RTX A4000",
+    "volumeInGb": 20,
+    "volumeMountPath": "/runpod-volume",
     "env": [
       {
         "key": "PROMPT",
